@@ -3,7 +3,7 @@ let totalAcumulado=0;
 export function agregarPedido(nombreCliente,productosPedido)
 {
     let total=0;
-    productosPedido.forEach(producto => {
+    productosPedido.forEach(producto =>    {
         total+=producto.precio;
     });
     const pedido={
@@ -26,6 +26,7 @@ export function listarPedidos()
 }
 
 export function mostrarTotalAcumulado()
+//HHSHSHS
 {
     console.log('=== Caja ===');
     console.log('Total acumulado: $${totalAcumulado}');
