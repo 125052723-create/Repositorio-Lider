@@ -14,14 +14,14 @@ export function agregarPedido(nombreCliente,productosPedido)
     }
     pedidos.push(pedido);
     totalAcumulado+=total;
-    console.log('Pedido#${pedido.id} agregado. Total del pedido: $${total}. ');
+    console.log(`Pedido#${pedido.id} agregado. Total del pedido: $${total}. `);
 
 }
 export function listarPedidos()
 {
     console.log('=== Pedidos ===');
     pedidos.forEach(pedido => {
-    console.log('Pedido#${pedido.id} - Cliente: ${pedido.cliente} - Total: $${pedido.total}');
+    console.log(`Pedido#${pedido.id} - Cliente: ${pedido.cliente} - Total: $${pedido.total}`);
     });
 }
 
@@ -29,5 +29,5 @@ export function mostrarTotalAcumulado()
 //HHSHSHS
 {
     console.log('=== Caja ===');
-    console.log('Total acumulado: $${totalAcumulado}');
+    console.log(`Total acumulado: $${totalAcumulado}`);
 }
