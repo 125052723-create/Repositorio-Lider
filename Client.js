@@ -7,6 +7,19 @@ const rl = readline.createInterface({
     output: process.stdout
 });
 
+function mostrarPromociones() {
+    const promociones = cocina.inventario.map(producto => {
+        return {
+            ...producto,
+            precio: producto.precio * 0.50
+        };
+    }); 
+
+    return promociones;
+}
+
+
+
 function opciones() {
     return `
  . ══════════════════════ Hola ${nombreUsuario} ══════════════════════ .
@@ -19,7 +32,8 @@ function opciones() {
   [ 3 ]  Mostrar pedidos
   [ 4 ]  Mostrar total de caja
   [ 5 ]  Pagar
-  [ 6 ]  Salir
+  [ 6 ]  Promociones
+  [ 7 ]  Salir
 
 
 `;
@@ -27,52 +41,6 @@ function opciones() {
 
 let totalPedido = 0;
 
-async function pagar() {
-
-    console.clear();
-
-    if (totalPedido === 0) {
-        console.log("No hay un pedido para pagar.");
-        await rl.question("\nPresiona ENTER para continuar...");
-        return;
-    }
-
-    console.log("══════════════════════ PAGAR ══════════════════════\n");
-    console.log(`Total a pagar: $${totalPedido}`);
-
-    let dinero = await rl.question("\nIngrese cantidad: $");
-    dinero = Number(dinero);
-
-    let cantidadSuficiente = false;
-
-    while (cantidadSuficiente != true) {
-        if (dinero < totalPedido) {
-
-            console.log("\nCantidad insuficiente\n");
-            console.log("══════════════════════ PAGAR ══════════════════════\n");
-            console.log(`Total a pagar: $${totalPedido}`);
-
-            dinero = await rl.question("\nIngrese cantidad: $");
-            dinero = Number(dinero);
-
-        } else {
-            cantidadSuficiente = true;
-            let cambio = dinero - totalPedido;
-
-            console.log("\nPago realizado");
-            console.log(`Total: $${totalPedido}`);
-            console.log(`Recibido: $${dinero}`);
-            console.log(`Cambio: $${cambio}`);
-
-            totalPedido = 0;
-            
-        }
-    }
-
-
-
-    await rl.question("\nPresiona ENTER para continuar...");
-}
 
 console.clear();
 
@@ -184,13 +152,61 @@ while (ejecutando) {
 
 
         case 5:
+            {
+                console.clear();
 
-            await pagar();
+                if (totalPedido === 0) {
+                    console.log("No hay un pedido para pagar.");
+                    await rl.question("\nPresiona ENTER para continuar...");
+                }
 
+                console.log("══════════════════════ PAGAR ══════════════════════\n");
+                console.log(`Total a pagar: $${totalPedido}`);
+
+                let dinero = await rl.question("\nIngrese cantidad: $");
+                dinero = Number(dinero);
+
+                let cantidadSuficiente = false;
+
+                while (cantidadSuficiente != true) {
+                    if (dinero < totalPedido) {
+
+                        console.log("\nCantidad insuficiente\n");
+                        console.log("══════════════════════ PAGAR ══════════════════════\n");
+                        console.log(`Total a pagar: $${totalPedido}`);
+
+                        dinero = await rl.question("\nIngrese cantidad: $");
+                        dinero = Number(dinero);
+
+                    } else {
+                        cantidadSuficiente = true;
+                        let cambio = dinero - totalPedido;
+
+                        console.log("\nPago realizado");
+                        console.log(`Total: $${totalPedido}`);
+                        console.log(`Recibido: $${dinero}`);
+                        console.log(`Cambio: $${cambio}`);
+
+                        totalPedido = 0;
+
+                    }
+                }
+
+
+
+                await rl.question("\nPresiona ENTER para continuar...");
+
+            }
             break;
 
-
         case 6:
+            console.clear();
+            console.log(mostrarPromociones());
+
+            await rl.question("\nPresiona ENTER para continuar...");
+
+            break;
+        case 7:
 
             ejecutando = false;
 
