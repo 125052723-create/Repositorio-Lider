@@ -46,10 +46,7 @@ function opciones() {
   [ 4 ]  Mostrar total de caja
   [ 5 ]  Pagar
   [ 6 ]  Promociones
-  [ 7 ]  Ver productos baratos (<= $80)
-  [ 8 ]  Ver productos caros (> $80)
-  [ 9 ]  Buscar por palabra clave
-  [ 10 ] Salir
+  [ 7 ]  Salir
 
 
 `;
@@ -275,38 +272,7 @@ while (ejecutando) {
             await rl.question("\nPresiona ENTER para continuar...");
 
             break;
-
         case 7:
-            console.clear();
-            console.log("═══ PRODUCTOS BARATOS (<= $80) ═══\n");
-            console.table(cocina.obtenerProductosBaratos(80));
-            await rl.question("\nPresiona ENTER para continuar...");
-            break;
-
-        case 8:
-            console.clear();
-            console.log("═══ PRODUCTOS CAROS (> $80) ═══\n");
-            console.table(cocina.obtenerProductosCaros(80));
-            await rl.question("\nPresiona ENTER para continuar...");
-            break;
-
-        case 9:
-            console.clear();
-            console.log("═══ BUSCAR PRODUCTOS ═══\n");
-            let palabra = await rl.question("Ingrese la palabra a buscar (ej: cafe, alimento): ");
-            
-            const resultados = cocina.buscarPorPalabraClave(palabra);
-            
-            if (resultados.length === 0) {
-                console.log("\nNo se encontraron coincidencias.");
-            } else {
-                console.table(resultados);
-            }
-            
-            await rl.question("\nPresiona ENTER para continuar...");
-            break;
-
-        case 10:
 
             ejecutando = false;
 

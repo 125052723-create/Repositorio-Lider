@@ -1,3 +1,4 @@
+// version 0.1 del modulo cocina
 export class GestorInventarioCocina {
 
     constructor() {
@@ -66,6 +67,27 @@ export class GestorInventarioCocina {
 
     buscarProducto(id) {
         return this.inventario.find(p => p.id === id);
+    }
+
+    // --- productos baratos y caros ---
+
+    // Obtener productos baratos 
+    obtenerProductosBaratos(limitePrecio = 80) {
+        return this.inventario.filter(p => p.precio <= limitePrecio);
+    }
+
+    // Obtener productos caros 
+    obtenerProductosCaros(limitePrecio = 80) {
+        return this.inventario.filter(p => p.precio > limitePrecio);
+    }
+
+    // Búsqueda de coincidencia por palabra clave sin importar mayus
+    buscarPorPalabraClave(criterio) {
+        const busqueda = criterio.toLowerCase();
+        return this.inventario.filter(p => 
+            p.nombre.toLowerCase().includes(busqueda) || 
+            p.categoria.toLowerCase().includes(busqueda)
+        );
     }
 }
 
