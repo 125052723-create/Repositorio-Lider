@@ -1,6 +1,6 @@
 import readline from "node:readline/promises";
-import { cocina } from "./cocina.js";
-import { agregarPedido, mostrarTotalAcumulado, listarPedidos } from "./caja.js";
+import {cocina} from "./cocina.js";
+import {agregarPedido,mostrarTotalAcumulado,listarPedidos,marcarPedidoComoPagado} from "./caja.js";
 
 const rl = readline.createInterface({
     input: process.stdin,
@@ -8,7 +8,7 @@ const rl = readline.createInterface({
 });
 
 function mostrarPromociones() {
-    const promociones = cocina.inventario.map(producto => {
+    const promociones = cocina.inventario.slice(0, 2).map(producto => {
         return {
             ...producto,
             precio: producto.precio * 0.50
@@ -18,7 +18,20 @@ function mostrarPromociones() {
     return promociones;
 }
 
+function mostrarListaProductos(productos) {
+    return productos.map(producto =>
+        `[${producto.id}] ${producto.nombre} - $${producto.precio}`
+    ).join("\n");
+}
 
+function productoDisponible(producto) {
+    if (producto.stock <= 0) {
+        console.log(`${producto.nombre} no esta disponible`);
+        return false;
+    }
+
+    return true;
+}
 
 function opciones() {
     return `
@@ -40,6 +53,7 @@ function opciones() {
 }
 
 let totalPedido = 0;
+let pedidoActual = null;
 
 
 console.clear();
@@ -66,7 +80,7 @@ while (ejecutando) {
 
             console.log("═══ PRODUCTOS ═══\n");
 
-            console.log(cocina.listarProductos());
+            console.table(cocina.listarProductos());
 
             await rl.question("\nPresiona ENTER para continuar...");
 
@@ -79,12 +93,11 @@ while (ejecutando) {
 
             console.log("═══ CREAR PEDIDO ═══\n");
 
-            console.log(cocina.listarProductos());
+            console.log(mostrarListaProductos(cocina.inventario));
 
-            let productosPedido = [];
+            const productosPedido = [];
 
             while (true) {
-
                 let id = await rl.question(
                     "\nIngrese el ID del producto (0 para terminar): "
                 );
@@ -95,18 +108,20 @@ while (ejecutando) {
                     break;
                 }
 
-                let producto = cocina.buscarProducto(id);
+                const producto = cocina.buscarProducto(id);
 
                 if (!producto) {
                     console.log("Producto no encontrado");
                     continue;
                 }
 
+                if (!productoDisponible(producto)) {
+                    continue;
+                }
+
                 productosPedido.push(producto);
 
-                console.log(
-                    `"${producto.nombre}" agregado al pedido`
-                );
+                console.log(`"${producto.nombre}" agregado al pedido`);
             }
 
             if (productosPedido.length === 0) {
@@ -121,7 +136,9 @@ while (ejecutando) {
                     totalPedido += producto.precio;
                 });
 
-                agregarPedido(nombreUsuario, productosPedido);
+                totalPedido *= 1.16;
+
+                pedidoActual = agregarPedido(nombreUsuario, productosPedido);
 
             }
 
@@ -158,6 +175,7 @@ while (ejecutando) {
                 if (totalPedido === 0) {
                     console.log("No hay un pedido para pagar.");
                     await rl.question("\nPresiona ENTER para continuar...");
+                    break;
                 }
 
                 console.log("══════════════════════ PAGAR ══════════════════════\n");
@@ -187,7 +205,9 @@ while (ejecutando) {
                         console.log(`Recibido: $${dinero}`);
                         console.log(`Cambio: $${cambio}`);
 
+                        marcarPedidoComoPagado(pedidoActual.id);
                         totalPedido = 0;
+                        pedidoActual = null;
 
                     }
                 }
@@ -201,7 +221,53 @@ while (ejecutando) {
 
         case 6:
             console.clear();
-            console.log(mostrarPromociones());
+            const promociones = mostrarPromociones();
+
+            console.log("═══ PRODUCTOS EN PROMOCION ═══\n");
+            console.log(mostrarListaProductos(promociones));
+
+            const productosPromocion = [];
+
+            while (true) {
+                let id = await rl.question(
+                    "\nIngrese el ID del producto (0 para terminar): "
+                );
+
+                id = Number(id);
+
+                if (id === 0) {
+                    break;
+                }
+
+                const productoOriginal = cocina.buscarProducto(id);
+                const producto = promociones.find(producto => producto.id === id);
+
+                if (!productoOriginal || !producto) {
+                    console.log("Producto no encontrado");
+                    continue;
+                }
+
+                if (!productoDisponible(productoOriginal)) {
+                    continue;
+                }
+
+                productosPromocion.push(producto);
+
+                console.log(`"${producto.nombre}" agregado al pedido`);
+            }
+
+            if (productosPromocion.length === 0) {
+                console.log("\nNo se agregaron productos");
+            } else {
+                totalPedido = productosPromocion.reduce(
+                    (total, producto) => total + producto.precio,
+                    0
+                );
+
+                totalPedido *= 1.16;
+
+                pedidoActual = agregarPedido(nombreUsuario, productosPromocion);
+            }
 
             await rl.question("\nPresiona ENTER para continuar...");
 
