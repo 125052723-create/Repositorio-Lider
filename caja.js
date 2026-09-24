@@ -1,7 +1,9 @@
+
 let pedidos=[];
 let totalAcumulado=0;
 let siguienteId=1;
-export function agregarPedido(nombreCliente,productosPedido)
+//Aqui use un callback
+export function agregarPedido(nombreCliente,productosPedido,callback)
 {
     const subtotal=productosPedido.reduce((acc,producto)=>acc+producto.precio,0);
     const IVA=subtotal*0.16;
@@ -18,21 +20,9 @@ export function agregarPedido(nombreCliente,productosPedido)
     };
     pedidos.push(pedido);
     totalAcumulado+=total;
-    console.log(`
-        ===================================
-        Pedido#${pedido.id}
-        ===================================
-        Cliente: ${pedido.cliente}
-        Productos: `);
-        productosPedido.forEach(producto=>{
-            console.log(`- ${producto.nombre} - $${producto.precio}`);
-        });
-        console.log(`===================================
-            Subtotal: $${pedido.subtotal}
-            IVA: $${pedido.iva}
-            Total: $${pedido.total}
-            ===================================`); 
-            return pedido;
+    
+    callback(pedido);   
+
 
 
 
@@ -121,4 +111,28 @@ export function mostrarTotalAcumulado()
    
     console.log(`Total Acumulado: $${totalAcumulado*1.16}`);
 
+}
+//Aqui use un callback
+export function pedidoListo(id,callback)
+{
+    const pedido=obtenerPedidoPorId(id);
+    if(!pedido)
+    {
+        callback(`Error: No se encontro ningun pedido con el ID ${id}.`);
+        return;
+    }
+    pedido.estado=' Pedido Listo';
+    callback(pedido,null);
+}
+//Aqui use un callback
+export function cancelarPedido(id,callback)
+{
+    const pedido=obtenerPedidoPorId(id);
+    if(!pedido)
+    {
+        callback(`Error: No se encontro ningun pedido con el ID ${id}.`);
+        return;
+    }
+    pedido.estado='Pedido Cancelado';
+    callback(pedido,null);
 }
