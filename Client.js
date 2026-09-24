@@ -49,7 +49,11 @@ function opciones() {
   [ 7 ]  Ver productos baratos (<= $80)
   [ 8 ]  Ver productos caros (> $80)
   [ 9 ]  Buscar por palabra clave
-  [ 10 ] Salir
+    [ 10 ] Agregar producto
+    [ 11 ] Editar producto
+    [ 12 ] Eliminar producto
+    [ 13 ] Buscar producto por ID
+    [ 14 ] Salir
 
 
 `;
@@ -307,6 +311,79 @@ while (ejecutando) {
             break;
 
         case 10:
+            console.clear();
+            console.log("═══ AGREGAR PRODUCTO ═══\n");
+
+            let nuevoId = Number(await rl.question("ID: "));
+            let nuevoNombre = await rl.question("Nombre: ");
+            let nuevaCategoria = await rl.question("Categoria: ");
+            let nuevoPrecio = Number(await rl.question("Precio: "));
+            let nuevoStock = Number(await rl.question("Stock: "));
+
+            console.log(cocina.agregarProducto(
+                nuevoId,
+                nuevoNombre,
+                nuevaCategoria,
+                nuevoPrecio,
+                nuevoStock
+            ));
+
+            await rl.question("\nPresiona ENTER para continuar...");
+            break;
+
+        case 11:
+            console.clear();
+            console.log("═══ EDITAR PRODUCTO ═══\n");
+
+            let idEditar = Number(await rl.question("Ingrese el ID del producto: "));
+            let productoEditar = cocina.buscarProducto(idEditar);
+
+            if (!productoEditar) {
+                console.log(`No se encontró ningún producto con el ID ${idEditar}.`);
+            } else {
+                let nombreEditar = await rl.question(`Nombre (${productoEditar.nombre}): `);
+                let categoriaEditar = await rl.question(`Categoria (${productoEditar.categoria}): `);
+                let precioEditar = await rl.question(`Precio (${productoEditar.precio}): `);
+                let stockEditar = await rl.question(`Stock (${productoEditar.stock}): `);
+
+                console.log(cocina.editarProducto(idEditar, {
+                    nombre: nombreEditar || productoEditar.nombre,
+                    categoria: categoriaEditar || productoEditar.categoria,
+                    precio: precioEditar === "" ? productoEditar.precio : Number(precioEditar),
+                    stock: stockEditar === "" ? productoEditar.stock : Number(stockEditar)
+                }));
+            }
+
+            await rl.question("\nPresiona ENTER para continuar...");
+            break;
+
+        case 12:
+            console.clear();
+            console.log("═══ ELIMINAR PRODUCTO ═══\n");
+
+            let idEliminar = Number(await rl.question("Ingrese el ID del producto: "));
+            console.log(cocina.eliminarProducto(idEliminar));
+
+            await rl.question("\nPresiona ENTER para continuar...");
+            break;
+
+        case 13:
+            console.clear();
+            console.log("═══ BUSCAR PRODUCTO POR ID ═══\n");
+
+            let idBuscar = Number(await rl.question("Ingrese el ID del producto: "));
+            let productoEncontrado = cocina.buscarProducto(idBuscar);
+
+            if (productoEncontrado) {
+                console.table([productoEncontrado]);
+            } else {
+                console.log(`No se encontró ningún producto con el ID ${idBuscar}.`);
+            }
+
+            await rl.question("\nPresiona ENTER para continuar...");
+            break;
+
+        case 14:
 
             ejecutando = false;
 
