@@ -18,6 +18,10 @@ function mostrarPromociones() {
     return promociones;
 }
 
+function prepararPedido(pedido){
+    console.log(`Preparando pedido# ${}...`);
+}
+
 function mostrarListaProductos(productos) {
     return productos.map(producto =>
         `[${producto.id}] ${producto.nombre} - $${producto.precio}`
