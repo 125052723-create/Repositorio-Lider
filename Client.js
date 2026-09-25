@@ -1,6 +1,6 @@
 import readline from "node:readline/promises";
-import {cocina} from "./cocina.js";
-import {agregarPedido,mostrarTotalAcumulado,listarPedidos,marcarPedidoComoPagado} from "./caja.js";
+import { cocina } from "./cocina.js";
+import { agregarPedido, mostrarTotalAcumulado, listarPedidos, marcarPedidoComoPagado, pedidoListo, listarPedidosPendientes, cancelarPedido } from "./caja.js";
 
 const rl = readline.createInterface({
     input: process.stdin,
@@ -13,14 +13,11 @@ function mostrarPromociones() {
             ...producto,
             precio: producto.precio * 0.50
         };
-    }); 
+    });
 
     return promociones;
 }
 
-function prepararPedido(pedido){
-    console.log(`Preparando pedido# ${}...`);
-}
 
 function mostrarListaProductos(productos) {
     return productos.map(producto =>
@@ -48,16 +45,17 @@ function opciones() {
   [ 2 ]  Crear Pedido
   [ 3 ]  Mostrar pedidos
   [ 4 ]  Mostrar total de caja
-  [ 5 ]  Pagar
-  [ 6 ]  Promociones
-  [ 7 ]  Ver productos baratos (<= $80)
-  [ 8 ]  Ver productos caros (> $80)
-  [ 9 ]  Buscar por palabra clave
-    [ 10 ] Agregar producto
-    [ 11 ] Editar producto
-    [ 12 ] Eliminar producto
-    [ 13 ] Buscar producto por ID
-    [ 14 ] Salir
+  [ 5 ]  Cancelar Pedidos
+  [ 6 ]  Pagar
+  [ 7 ]  Promociones
+  [ 8 ]  Ver productos baratos (<= $80)
+  [ 9 ]  Ver productos caros (> $80)        
+  [ 10 ] Buscar por palabra clave
+    [ 11 ] Agregar producto
+    [ 12 ] Editar producto
+    [ 13 ] Eliminar producto
+    [ 14 ] Buscar producto por ID
+  [ 15 ] Salir
 
 
 `;
@@ -65,6 +63,7 @@ function opciones() {
 
 let totalPedido = 0;
 let pedidoActual = null;
+
 
 
 console.clear();
@@ -107,6 +106,7 @@ while (ejecutando) {
             console.log(mostrarListaProductos(cocina.inventario));
 
             const productosPedido = [];
+            const ids = [];
 
             while (true) {
                 let id = await rl.question(
@@ -133,6 +133,7 @@ while (ejecutando) {
                 productosPedido.push(producto);
 
                 console.log(`"${producto.nombre}" agregado al pedido`);
+                ids.push(Number(id));
             }
 
             if (productosPedido.length === 0) {
@@ -149,9 +150,56 @@ while (ejecutando) {
 
                 totalPedido *= 1.16;
 
-                pedidoActual = agregarPedido(nombreUsuario, productosPedido);
+                agregarPedido(nombreUsuario, productosPedido, (pedido) => {
+                    pedidoActual = pedido;
+                });
+
+                //console.log("pedido actual: " + pedidoActual);
+
+
+                for (let i = 0; i < ids.length; i++) {
+
+                    const idProducto = ids[i];
+
+
+                    try {
+
+                        const producto = await cocina.verificarIngredientes(idProducto);
+
+                        console.log(`\nVerificando ingredientes de ${producto.nombre}...`);
+
+                        const numeroAleatorio = Math.floor(Math.random() * 2) + 1;
+
+                        if (numeroAleatorio === 1) {
+
+                            console.log("Preparando cafe...\n");
+
+                            const resultado = await cocina.prepararCafe(idProducto);
+
+                            console.log(resultado.mensaje);
+                            console.log(`Stock restante: ${resultado.stockRestante}`);
+
+                        } 
+                          else {
+
+                            await cocina.simularErrorCocina();
+                        }
+
+                    } catch (error) {
+                        console.log(`\n${error}`);
+                    }
+                }
 
             }
+
+            pedidoListo(pedidoActual.id, (pedido, error) => {
+                if (error) {
+                    console.log(error);
+                    return;
+                }
+
+                console.log(`Pedido #${pedido.id} esta listo`);
+            });
 
             await rl.question("\nPresiona ENTER para continuar...");
 
@@ -161,7 +209,13 @@ while (ejecutando) {
         case 3:
             console.clear();
 
+
             listarPedidos();
+
+            console.log(`\n\n`);
+
+            listarPedidosPendientes();
+
 
             await rl.question("\nPresiona ENTER para continuar...");
 
@@ -180,6 +234,29 @@ while (ejecutando) {
 
 
         case 5:
+            console.clear();
+
+            let IDPedido = 0;
+
+            console.log("══════════════════════ Cancelar Pedidos ══════════════════════\n");
+
+            IDPedido = Number(await rl.question(`Ingrese el ID del pedido a cancelar: `));
+
+            cancelarPedido(IDPedido, (pedido, error) => {
+                if (error) {
+                    console.log(error);
+                    return;
+                }
+
+                console.log(`Pedido #${pedido.id} ha sido cancelado con exito`);
+            });
+
+            await rl.question("\nPresiona ENTER para continuar...");
+
+            break;
+
+        case 6:
+
             {
                 console.clear();
 
@@ -210,6 +287,7 @@ while (ejecutando) {
                     } else {
                         cantidadSuficiente = true;
                         let cambio = dinero - totalPedido;
+                        //console.log("pedido actual: " + pedidoActual);
 
                         console.log("\nPago realizado");
                         console.log(`Total: $${totalPedido}`);
@@ -229,8 +307,7 @@ while (ejecutando) {
 
             }
             break;
-
-        case 6:
+        case 7:
             console.clear();
             const promociones = mostrarPromociones();
 
@@ -284,37 +361,38 @@ while (ejecutando) {
 
             break;
 
-        case 7:
+        case 8:
             console.clear();
             console.log("═══ PRODUCTOS BARATOS (<= $80) ═══\n");
             console.table(cocina.obtenerProductosBaratos(80));
             await rl.question("\nPresiona ENTER para continuar...");
             break;
 
-        case 8:
+        case 9:
+
             console.clear();
             console.log("═══ PRODUCTOS CAROS (> $80) ═══\n");
             console.table(cocina.obtenerProductosCaros(80));
             await rl.question("\nPresiona ENTER para continuar...");
             break;
+        case 10:
 
-        case 9:
             console.clear();
             console.log("═══ BUSCAR PRODUCTOS ═══\n");
             let palabra = await rl.question("Ingrese la palabra a buscar (ej: cafe, alimento): ");
-            
+
             const resultados = cocina.buscarPorPalabraClave(palabra);
-            
+
             if (resultados.length === 0) {
                 console.log("\nNo se encontraron coincidencias.");
             } else {
                 console.table(resultados);
             }
-            
+
             await rl.question("\nPresiona ENTER para continuar...");
             break;
+        case 11:
 
-        case 10:
             console.clear();
             console.log("═══ AGREGAR PRODUCTO ═══\n");
 
@@ -334,8 +412,8 @@ while (ejecutando) {
 
             await rl.question("\nPresiona ENTER para continuar...");
             break;
+        case 12:
 
-        case 11:
             console.clear();
             console.log("═══ EDITAR PRODUCTO ═══\n");
 
@@ -360,8 +438,8 @@ while (ejecutando) {
 
             await rl.question("\nPresiona ENTER para continuar...");
             break;
+        case 13:
 
-        case 12:
             console.clear();
             console.log("═══ ELIMINAR PRODUCTO ═══\n");
 
@@ -370,8 +448,8 @@ while (ejecutando) {
 
             await rl.question("\nPresiona ENTER para continuar...");
             break;
+        case 14:
 
-        case 13:
             console.clear();
             console.log("═══ BUSCAR PRODUCTO POR ID ═══\n");
 
@@ -387,12 +465,11 @@ while (ejecutando) {
             await rl.question("\nPresiona ENTER para continuar...");
             break;
 
-        case 14:
+        case 15:
 
             ejecutando = false;
 
             break;
-
 
         default:
 
